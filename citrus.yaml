@@ -1,0 +1,9 @@
+# 填寫絕對路徑或相對路徑
+train: ./images/train
+val: ./images/test
+
+# 類別數量
+nc: 2 
+
+# 類別名稱 (順序必須與你轉 TXT 時設定的 class_id 0, 1, 2... 一致)
+names: ['1', '2']

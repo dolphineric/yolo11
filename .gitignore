@@ -1,0 +1,18 @@
+# ===== 大型資料（超過 GitHub 限制 / 不適合進 repo）=====
+data/
+runs/
+*.zip
+
+# 模型權重（73~78MB，建議改放 GitHub Releases 或 Git LFS）
+*.pt
+
+# ===== 環境 / 快取 =====
+.venv/
+__pycache__/
+*.pyc
+*.cache
+*.cache.npy
+
+# ===== 其他 =====
+.vscode/
+mlflow/
