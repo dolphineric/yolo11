@@ -2,7 +2,6 @@
 # 開頭加 / = 只排除「專案根目錄」的 data 與 runs，
 # 不會影響套件內的 ultralytics_yolo11/data（Python 程式碼）
 /data/
-/runs/
 *.zip
 
 # 模型權重（73~78MB，建議改放 GitHub Releases 或 Git LFS）
@@ -18,3 +17,5 @@ __pycache__/
 # ===== 其他 =====
 .vscode/
 mlflow/
+*.pptx
+*.md

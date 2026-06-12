@@ -27,8 +27,17 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
+import logging  # noqa: E402
+
 import torch  # noqa: E402
 from ultralytics_yolo11 import YOLO  # noqa: E402
+
+# ── 修正：防止 "ultralytics" logger 被兩個套件各加一個 handler，導致每行訊息重複顯示兩次 ──
+_ul_logger = logging.getLogger("ultralytics")
+if len(_ul_logger.handlers) > 1:
+    # 保留第一個 handler，移除多餘的
+    for _h in _ul_logger.handlers[1:]:
+        _ul_logger.removeHandler(_h)
 
 # ============================ 要掃的矩陣（改這裡）============================
 MODELS = [
