@@ -123,7 +123,7 @@ def arrow(slide, x, y, w, h, fill=MINT):
     return shp
 
 
-def pill(slide, x, y, w, h, text, fill=TEAL, tcolor=WHITE, tsize=11):
+def pill(slide, x, y, w, h, text, fill=TEAL, tcolor=WHITE, tsize=11, font=MONO):
     shp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
     try:
         shp.adjustments[0] = 0.5
@@ -140,7 +140,7 @@ def pill(slide, x, y, w, h, text, fill=TEAL, tcolor=WHITE, tsize=11):
     tf.margin_top = 0; tf.margin_bottom = 0
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
-    setrun(p.add_run(), text, tsize, tcolor, font=MONO)
+    setrun(p.add_run(), text, tsize, tcolor, font=font)
     return shp
 
 
@@ -375,7 +375,58 @@ box(s, 0.6, 5.35, 12.1, 1.75, [
               ("一層 3×3 從 O(c²·9) 降到 O(c·9 + c²)，這是參數更少的主因之一", 14, TEXT)], "sa": 0},
 ], fill=PANEL, round_=True)
 
-# ============================================================ 10 設計哲學 closing
+# ============================================================ 10 IoU 對照表
+s = slide(WHITE)
+box(s, 0.6, 0.45, 12.2, 0.7, [{"runs": [("loss 的 IoU 與「判斷正確」的 IoU 一樣嗎？", 30, NAVY, True)]}])
+box(s, 0.62, 1.13, 7.6, 0.4, [{"runs": [
+    ("答案：不一樣。", 14, NAVY, True),
+    ("訓練用 CIoU，評估 mAP 與 NMS 用純 IoU。", 14, MUTED)]}])
+pill(s, 8.55, 1.1, 1.95, 0.42, "訓練 CIoU", TEAL, WHITE, 11, ZH)
+pill(s, 10.62, 1.1, 2.1, 0.42, "評估 純 IoU", NAVY, WHITE, 11, ZH)
+
+iou_rows = [
+    ("header", "用途", "哪種 IoU", "程式位置", "為什麼選這種"),
+    ("ciou", "① 框回歸 loss", "CIoU", "loss.py:189", "要可微分；兩框零重疊時仍要有梯度，模型才學得動"),
+    ("ciou", "② 正樣本分配", "CIoU", "tal.py:215", "當「框品質」分數，決定哪個 anchor 配哪個 GT"),
+    ("plain", "③ 驗證 / mAP 判定", "純 IoU", "metrics.py:454", "要公平、標準（COCO 慣例），門檻 0.5–0.95"),
+    ("plain", "④ NMS 去重", "純 IoU", "iou = 0.7", "只需衡量重疊程度，移除重複的框"),
+]
+colw_iou = [2.7, 1.9, 2.5, 5.0]
+tx, ty = 0.6, 1.72
+for ri, row in enumerate(iou_rows):
+    kind = row[0]
+    cells = row[1:]
+    rh = 0.5 if ri == 0 else 0.72
+    cy = ty if ri == 0 else ty + 0.5 + (ri - 1) * 0.72
+    for ci, cell in enumerate(cells):
+        cx = tx + sum(colw_iou[:ci])
+        if ri == 0:
+            fill, tcol, bold = NAVY, WHITE, True
+        else:
+            fill = "E1EFEA" if kind == "ciou" else "E9EEF5"
+            tcol, bold = TEXT, False
+        rcolor, rbold = tcol, bold
+        if ri > 0 and ci == 1:
+            rcolor = TEAL if cell == "CIoU" else NAVY
+            rbold = True
+        mono = (ri > 0 and ci == 2)
+        box(s, cx, cy, colw_iou[ci], rh, [
+            {"runs": [(cell, 11.5 if mono else 12.5, rcolor, rbold, MONO if mono else ZH)],
+             "align": PP_ALIGN.LEFT if ci in (0, 3) else PP_ALIGN.CENTER, "sa": 0, "ls": 1.0}
+        ], fill=fill, line="C9D6E2", line_w=0.5, anchor=MSO_ANCHOR.MIDDLE)
+
+box(s, 0.6, 5.28, 12.1, 1.7, [
+    {"runs": [("關鍵差別：為什麼不能混用", 16, TEAL, True)], "sa": 8},
+    {"runs": [("純 IoU = 交集 / 聯集", 14.5, NAVY, True),
+              ("　兩框沒重疊就 = 0，梯度也 = 0", 13.5, TEXT)], "sa": 7},
+    {"runs": [("CIoU = IoU − 中心距離懲罰 − 長寬比懲罰", 14.5, NAVY, True),
+              ("　零重疊時仍有梯度可學", 13.5, TEXT)], "sa": 7},
+    {"runs": [("→ ", 13.5, MINT, True), ("loss 一定用 CIoU 家族", 13.5, NAVY, True),
+              ("（要梯度）；", 13.5, TEXT), ("mAP / NMS 一定用純 IoU", 13.5, NAVY, True),
+              ("（要跟論文公平比較）", 13.5, TEXT)], "sa": 0},
+], fill=PANEL, round_=True)
+
+# ============================================================ 11 設計哲學 closing
 s = slide(NAVY)
 box(s, 0.7, 0.55, 12.0, 0.8, [{"runs": [("設計哲學統整", 34, WHITE, True)]}])
 phil = [
