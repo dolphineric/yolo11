@@ -426,7 +426,123 @@ box(s, 0.6, 5.28, 12.1, 1.7, [
               ("（要跟論文公平比較）", 13.5, TEXT)], "sa": 0},
 ], fill=PANEL, round_=True)
 
-# ============================================================ 11 設計哲學 closing
+def vartable(s, rows, colw, ty=1.62, rh=0.74):
+    tx = 0.6
+    for ri, row in enumerate(rows):
+        cyr = ty if ri == 0 else ty + 0.5 + (ri - 1) * rh
+        rhr = 0.5 if ri == 0 else rh
+        for ci, cell in enumerate(row):
+            cx = tx + sum(colw[:ci])
+            if ri == 0:
+                fill, tcol, bold = NAVY, WHITE, True
+            else:
+                fill = PANEL if ri % 2 else WHITE
+                tcol, bold = TEXT, False
+            mono = (ri > 0 and ci == 0)
+            box(s, cx, cyr, colw[ci], rhr, [
+                {"runs": [(cell, 11.5 if mono else 12, tcol if not (ri > 0 and ci == 0) else NAVY, bold or (ri > 0 and ci == 0), MONO if mono else ZH)],
+                 "align": PP_ALIGN.CENTER if ci == 1 else PP_ALIGN.LEFT, "sa": 0, "ls": 1.0}
+            ], fill=fill, line="C9D6E2", line_w=0.5, anchor=MSO_ANCHOR.MIDDLE)
+
+
+# ============================================================ 11 C3k2 改變與提升
+s = slide(WHITE)
+box(s, 0.6, 0.45, 10.5, 0.7, [{"runs": [("C3k2：進入 YOLO11 的改變　—　取代 v8 的 C2f", 27, NAVY, True)]}])
+pill(s, 11.0, 0.55, 1.7, 0.42, "深入 1/2", TEAL, WHITE, 11, ZH)
+box(s, 0.6, 1.45, 5.45, 2.45, [
+    {"runs": [("YOLOv8 · C2f", 16, MUTED, True)], "sa": 9},
+    {"runs": [("• 內部 Bottleneck e=1.0（不壓縮）", 13, TEXT)], "sa": 8, "ls": 1.0},
+    {"runs": [("• 固定結構，無深度開關", 13, TEXT)], "sa": 8, "ls": 1.0},
+    {"runs": [("• 每層都是同一種塊", 13, TEXT)], "sa": 0, "ls": 1.0},
+], fill=PANEL, round_=True)
+arrow(s, 6.2, 2.4, 0.55, 0.5)
+box(s, 6.95, 1.45, 5.75, 2.45, [
+    {"runs": [("YOLO11 · C3k2", 16, TEAL, True)], "sa": 9},
+    {"runs": [("• 新增 c3k 開關：可換成巢狀 C3k", 13, TEXT)], "sa": 8, "ls": 1.0},
+    {"runs": [("• 內部 e=0.5（再壓一半通道）", 13, TEXT)], "sa": 8, "ls": 1.0},
+    {"runs": [("• 可逐層 / 逐規模調深度", 13, TEXT)], "sa": 0, "ls": 1.0},
+], fill="E1EFEA", round_=True)
+box(s, 0.6, 4.1, 11.0, 0.4, [{"runs": [("四大提升", 16, TEAL, True)]}])
+gains = [
+    ("同算力更深", "c3k=True 用巢狀 CSP 加深特徵抽取"),
+    ("更省參數", "e=0.5 內部再壓一半通道"),
+    ("彈性縮放", "m / l / x 規模自動啟用 c3k=True"),
+    ("收斂更快", "保留 CSP 多梯度路徑優勢"),
+]
+for i, (h, d) in enumerate(gains):
+    gx = 0.6 + (i % 2) * 6.2
+    gy = 4.55 + (i // 2) * 1.18
+    box(s, gx, gy, 5.9, 1.05, [
+        {"runs": [(f"{i+1}　", 14, MINT, True), (h, 15, NAVY, True)], "sa": 4},
+        {"runs": [(d, 12.5, TEXT)], "ls": 1.0},
+    ], fill=PANEL, round_=True, anchor=MSO_ANCHOR.MIDDLE)
+
+# ============================================================ 12 C3k2 可調變數
+s = slide(WHITE)
+box(s, 0.6, 0.45, 10.5, 0.7, [{"runs": [("C3k2　—　可調變數與適用情形", 28, NAVY, True)]}])
+pill(s, 11.0, 0.55, 1.7, 0.42, "深入 2/2", TEAL, WHITE, 11, ZH)
+box(s, 0.62, 1.13, 12.1, 0.4, [{"runs": [
+    ("在 ", 13, MUTED), ("yolo11.yaml", 13, NAVY, True, MONO),
+    (" 的 args ", 13, MUTED), ("[c2, c3k, e]", 13, NAVY, True, MONO),
+    (" 直接改；改 n（深度）用 scales 的 depth 倍率", 13, MUTED)]}])
+vartable(s, [
+    ["變數", "預設", "作用", "什麼情形適合調"],
+    ["n", "×depth", "區塊堆疊深度", "任務難 / 資料多 → 加深；想快 / 怕過擬合 → 減"],
+    ["c3k", "False", "內部是否用巢狀 C3k", "深層、大模型、複雜場景 → True；淺層求快 → False"],
+    ["e", "0.5（淺層 0.25）", "內部通道壓縮比", "省算力 → 調小；要更大容量 → 調大"],
+    ["shortcut", "True", "殘差直連", "深網路保持 True；頸部淺塊可關"],
+    ["C3k2_CA / DCN", "本 fork", "座標注意力 / 可變形卷積", "小物件定位、形變大 → 試這些變體"],
+], [2.5, 2.0, 3.0, 4.6], ty=1.62, rh=0.72)
+box(s, 0.6, 6.35, 12.1, 0.85, [
+    {"runs": [("給你專案：", 13.5, TEAL, True),
+              ("病斑小又密 → 先把淺層 e 留 0.25 省算力、深層 c3k=True 加強語意；定位不準再試 C3k2_DCN。", 13.5, TEXT)]},
+], fill="E4F1EE", round_=True, anchor=MSO_ANCHOR.MIDDLE)
+
+# ============================================================ 13 Conv 改變與提升
+s = slide(WHITE)
+box(s, 0.6, 0.45, 10.5, 0.7, [{"runs": [("Conv：進入 YOLO11 的改變", 28, NAVY, True)]}])
+pill(s, 11.0, 0.55, 1.7, 0.42, "深入 1/2", TEAL, WHITE, 11, ZH)
+box(s, 0.6, 1.4, 12.1, 0.85, [
+    {"runs": [("先講清楚：", 14, NAVY, True),
+              ("Conv 模組本身沿用 v5 / v8，仍是 Conv2d + BN + SiLU，沒有改變。", 14, TEXT)], "sa": 3},
+    {"runs": [("真正的卷積相關提升，在於 YOLO11「怎麼用卷積」：", 13.5, MUTED)]},
+], fill="E4F1EE", round_=True, anchor=MSO_ANCHOR.MIDDLE)
+conv_gains = [
+    ("① 分類頭改用 DWConv（深度可分離卷積）",
+     "參數大減：標準 O(c²·k²) → 深度可分離 O(c·k² + c²)　·　head.py:100"),
+    ("② stride-2 卷積取代池化下採樣",
+     "下採樣本身也能學特徵，不再用無參數的 MaxPool"),
+    ("③ BN 可融合進卷積權重",
+     "部署時 BN 併入卷積，推論少一次運算（forward_fuse）"),
+]
+for i, (h, d) in enumerate(conv_gains):
+    cy = 2.55 + i * 1.42
+    box(s, 0.6, cy, 12.1, 1.22, [
+        {"runs": [(h, 16, NAVY, True)], "sa": 5},
+        {"runs": [(d, 13, TEXT)], "ls": 1.05},
+    ], fill=PANEL, round_=True, anchor=MSO_ANCHOR.MIDDLE)
+
+# ============================================================ 14 Conv 可調變數
+s = slide(WHITE)
+box(s, 0.6, 0.45, 10.5, 0.7, [{"runs": [("Conv　—　可調變數與適用情形", 28, NAVY, True)]}])
+pill(s, 11.0, 0.55, 1.7, 0.42, "深入 2/2", TEAL, WHITE, 11, ZH)
+box(s, 0.62, 1.13, 12.1, 0.4, [{"runs": [
+    ("這些是", 13, MUTED), ("結構參數", 13, NAVY, True),
+    ("，在模型 yaml / 程式裡改（不在 default.yaml 訓練超參數）", 13, MUTED)]}])
+vartable(s, [
+    ["變數", "預設", "作用", "什麼情形適合調"],
+    ["k", "3", "卷積核大小 → 感受野", "需更大感受野 → 5 / 7（成本↑，少用）"],
+    ["s", "1", "步幅 → 下採樣", "s=2 解析度減半（主幹下採樣用）"],
+    ["g", "1", "分組卷積", "g=c1 → DWConv，邊緣部署省參數"],
+    ["d", "1", "空洞卷積", "不下採樣也想擴感受野時"],
+    ["act", "SiLU", "激活函數", "邊緣裝置 → ReLU 更快；要準度留 SiLU"],
+], [2.2, 1.7, 3.2, 5.0], ty=1.62, rh=0.72)
+box(s, 0.6, 6.35, 12.1, 0.85, [
+    {"runs": [("最有效的槓桿不在 Conv 參數：", 13.5, TEAL, True),
+              ("imgsz（輸入解析度）決定卷積實際看到多大範圍 — 小物件先調它（如 640 → 960）。", 13.5, TEXT)]},
+], fill="E4F1EE", round_=True, anchor=MSO_ANCHOR.MIDDLE)
+
+# ============================================================ 15 設計哲學 closing
 s = slide(NAVY)
 box(s, 0.7, 0.55, 12.0, 0.8, [{"runs": [("設計哲學統整", 34, WHITE, True)]}])
 phil = [
