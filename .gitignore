@@ -20,5 +20,6 @@ mlflow/
 *.pptx
 *.md
 
-# docs/ 內的說明文件要進 repo（排除上面的 *.md 規則）
+# docs/ 內的說明文件要進 repo（排除上面的 *.md / *.pptx 規則）
 !docs/*.md
+!docs/*.pptx
